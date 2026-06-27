@@ -145,6 +145,19 @@ function Test-RepositoryHasCommit {
     return Test-GitCommand @("rev-parse", "--verify", "HEAD")
 }
 
+function Test-LocalBranchAhead {
+    if (-not (Test-RepositoryHasCommit)) {
+        return $false
+    }
+
+    $aheadCount = Get-GitText @("rev-list", "--count", "origin/$Branch..HEAD")
+    if ($aheadCount -match "^\d+$") {
+        return ([int]$aheadCount -gt 0)
+    }
+
+    return $false
+}
+
 function Commit-LocalChanges {
     Invoke-Git @("add", "-A")
 
@@ -214,7 +227,7 @@ function Sync-Once {
     $committed = Commit-LocalChanges
     Pull-RemoteChanges
 
-    if ($committed -or (Test-RemoteBranch)) {
+    if ($committed -or (Test-LocalBranchAhead) -or (Test-RemoteBranch)) {
         Push-LocalChanges
     }
     else {
