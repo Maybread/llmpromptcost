@@ -1,5 +1,5 @@
-﻿source_file,prompt_id,prompt_type,encoding,original_rows,retained_rows,removed_missing_score_rows,normalization_method,missing_required_columns,notes
-qwen-prompt1-1.csv,Condition 1,Baseline open prompt,utf-8-sig,500,500,0,"scores already in [0, 1]",,response_text missing; filled with empty string for cost computation
+﻿source_file,prompt_id,prompt_type,encoding,original_rows,retained_rows,removed_missing_score_rows,normalization_method,missing_columns,notes
+qwen-prompt1-1.csv,Condition 1,Baseline open prompt,utf-8-sig,500,500,0,"scores already in [0, 1]",,response_text missing; retained as score-only file
 qwen-prompt1-2.csv,Condition 2,Role prompt,gb18030,500,500,0,"scores already in [0, 1]",,
 qwen-prompt1-3.csv,Condition 3,Task-component prompt,gb18030,500,500,0,"scores already in [0, 1]",,
 qwen-prompt1-4.csv,Condition 4,Reasoning scaffold prompt,gb18030,500,500,0,"scores already in [0, 1]",,
