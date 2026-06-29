@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Use this skill to run a cost-function-guided iterative prompt optimization workflow for AI-generated scientific explanations. This version uses a full-score target point and gives the highest weight to conceptual dispersion, so it prioritizes prompts that can generate high-quality responses stably.
+Use this skill to run a cost-function-guided iterative prompt optimization workflow for AI-generated scientific explanations. This version uses a full-score target point and gives equal weight to all five cost components, so it balances stability, full-score proximity, density peak quality, normative-region entry, and weak-dimension repair.
 
 This skill is for experiments where responses have already been scored on three dimensions:
 
@@ -35,18 +35,18 @@ This represents the minimum high-quality region. A response enters the normative
 The stable-cost function is:
 
 ```text
-J_stable(P) = 0.30*C_disp
-            + 0.25*C_norm
+J_stable(P) = 0.20*C_disp
+            + 0.20*C_norm
             + 0.20*C_peak
-            + 0.15*C_region
-            + 0.10*C_weak
+            + 0.20*C_region
+            + 0.20*C_weak
 ```
 
 The first cost term, `C_disp`, is computed as a root-mean-square normalized distance rather than a simple arithmetic mean.
 
 A lower `J_stable(P)` indicates a better prompt.
 
-This weighting means that the experiment gives the highest priority to response stability, while still requiring proximity to the ideal full-score explanation.
+This weighting means that the experiment treats the five cost components as equally important.
 
 ---
 
@@ -55,7 +55,7 @@ This weighting means that the experiment gives the highest priority to response 
 Use this skill when the user wants to:
 
 - recalculate prompt performance with target point `(1,1,1)`;
-- make conceptual dispersion the highest-weighted cost component;
+- evaluate prompt performance with equal weights across the five stable-cost components;
 - identify prompts that generate high-quality responses stably;
 - redesign second-round prompts from first-round cost results;
 - compare task-component prompts, demonstration prompts, and hybrid prompts;
@@ -195,9 +195,9 @@ Formula:
 
 ```text
 theta = (0.80, 0.80, 0.80)
-C_weak = [max(0, 0.80 - mean_D1)
-        + max(0, 0.80 - mean_D2)
-        + max(0, 0.80 - mean_D3)] / 3
+C_weak = max(0, 0.80 - mean_D1)
+       + max(0, 0.80 - mean_D2)
+       + max(0, 0.80 - mean_D3)
 ```
 
 Interpretation: lower values indicate no obvious dimension-level weakness.
@@ -445,7 +445,7 @@ Must include:
 1. Data overview
 2. New formula definition
 3. Why v* is set to (1,1,1)
-4. Why C_disp has the highest weight
+4. Why equal weights are used
 5. Prompt ranking by J_stable
 6. Diagnosis of the best prompts
 7. Next-round prompt generation logic
@@ -506,14 +506,14 @@ def compute_stable_prompt_cost(df_prompt):
     P_omega = in_omega.mean()
     C_region = 1 - P_omega
 
-    C_weak = np.mean(np.maximum(0, theta - mu))
+    C_weak = np.sum(np.maximum(0, theta - mu))
 
     J_stable = (
-        0.30 * C_disp
-        + 0.25 * C_norm
+        0.20 * C_disp
+        + 0.20 * C_norm
         + 0.20 * C_peak
-        + 0.15 * C_region
-        + 0.10 * C_weak
+        + 0.20 * C_region
+        + 0.20 * C_weak
     )
 
     return {
@@ -554,7 +554,7 @@ Chinese version:
 
 ## Important Cautions
 
-1. `C_disp` has the highest weight, but it must not override scientific quality.
+1. All five components have equal weight, so no single component should override the others.
 2. A prompt with low dispersion but low D1/D2/D3 quality should not be considered optimal.
 3. If a prompt has extremely low `C_disp`, inspect `response_text` for over-template or homogenized answers.
 4. Do not predefine next-round prompts before current-round stable cost is computed.

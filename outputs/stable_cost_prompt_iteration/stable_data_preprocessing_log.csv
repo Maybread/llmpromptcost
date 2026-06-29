@@ -1,8 +1,8 @@
 ﻿source_file,prompt_id,prompt_type,encoding,original_rows,retained_rows,removed_missing_score_rows,normalization_method,missing_columns,notes
-qwen-prompt1-1.csv,Condition 1,Baseline open prompt,utf-8-sig,500,500,0,"scores already in [0, 1]",,response_text missing; retained as score-only file
-qwen-prompt1-2.csv,Condition 2,Role prompt,gb18030,500,500,0,"scores already in [0, 1]",,
-qwen-prompt1-3.csv,Condition 3,Task-component prompt,gb18030,500,500,0,"scores already in [0, 1]",,
-qwen-prompt1-4.csv,Condition 4,Reasoning scaffold prompt,gb18030,500,500,0,"scores already in [0, 1]",,
-qwen-prompt1-5.csv,Condition 5,Knowledge-grounded prompt (RAG),gb18030,500,500,0,"scores already in [0, 1]",,
-qwen-prompt1-6.csv,Condition 6,Self-checking prompt,gb18030,500,500,0,"scores already in [0, 1]",,
-qwen-prompt1-7.csv,Condition 7,Demonstration prompt,gb18030,500,500,0,"scores already in [0, 1]",,
+qwen-prompt1-1.csv,R1-P1,Baseline open prompt,utf-8-sig,500,500,0,"scores already in [0, 1]",,response_text missing; retained as score-only file
+qwen-prompt1-2.csv,R1-P2,Role prompt,gb18030,500,500,0,"scores already in [0, 1]",,
+qwen-prompt1-3.csv,R1-P3,Task-component prompt,gb18030,500,500,0,"scores already in [0, 1]",,
+qwen-prompt1-4.csv,R1-P4,Reasoning scaffold prompt,gb18030,500,500,0,"scores already in [0, 1]",,
+qwen-prompt1-5.csv,R1-P5,Knowledge-grounded prompt (RAG),gb18030,500,500,0,"scores already in [0, 1]",,
+qwen-prompt1-6.csv,R1-P6,Self-checking prompt,gb18030,500,500,0,"scores already in [0, 1]",,
+qwen-prompt1-7.csv,R1-P7,Demonstration prompt,gb18030,500,500,0,"scores already in [0, 1]",,

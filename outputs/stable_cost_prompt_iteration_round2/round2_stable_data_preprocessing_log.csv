@@ -1,0 +1,4 @@
+﻿source_file,prompt_id,prompt_type,encoding,original_rows,retained_rows,removed_missing_score_rows,normalization_method,missing_columns,notes
+qwen-prompt1-3.csv,R1-C3,Task-component baseline from round 1,gb18030,500,500,0,"scores already in [0, 1]",,
+qwen-prompt1-7.csv,R1-C7,Demonstration baseline from round 1,gb18030,500,500,0,"scores already in [0, 1]",,
+PHYSICS-R2-C3-score.csv,R2-P3*P7,Round 2 optimized prompt,utf-8-sig,500,500,0,"scores already in [0, 1]",,"response_text missing; retained as score-only round2 file; mapped Score->D1, score2->D2, Score_3->D3"

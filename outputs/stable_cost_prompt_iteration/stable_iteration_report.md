@@ -4,19 +4,19 @@
 
 This stable-cost prompt iteration used 3500 scored responses from 7 prompt conditions in `round1/`.
 
-| source_file        | prompt_id   | prompt_type                     | encoding  | original_rows | retained_rows | removed_missing_score_rows | normalization_method     | missing_columns | notes                                              |
-| ------------------ | ----------- | ------------------------------- | --------- | ------------- | ------------- | -------------------------- | ------------------------ | --------------- | -------------------------------------------------- |
-| qwen-prompt1-1.csv | Condition 1 | Baseline open prompt            | utf-8-sig | 500           | 500           | 0                          | scores already in [0, 1] |                 | response_text missing; retained as score-only file |
-| qwen-prompt1-2.csv | Condition 2 | Role prompt                     | gb18030   | 500           | 500           | 0                          | scores already in [0, 1] |                 |                                                    |
-| qwen-prompt1-3.csv | Condition 3 | Task-component prompt           | gb18030   | 500           | 500           | 0                          | scores already in [0, 1] |                 |                                                    |
-| qwen-prompt1-4.csv | Condition 4 | Reasoning scaffold prompt       | gb18030   | 500           | 500           | 0                          | scores already in [0, 1] |                 |                                                    |
-| qwen-prompt1-5.csv | Condition 5 | Knowledge-grounded prompt (RAG) | gb18030   | 500           | 500           | 0                          | scores already in [0, 1] |                 |                                                    |
-| qwen-prompt1-6.csv | Condition 6 | Self-checking prompt            | gb18030   | 500           | 500           | 0                          | scores already in [0, 1] |                 |                                                    |
-| qwen-prompt1-7.csv | Condition 7 | Demonstration prompt            | gb18030   | 500           | 500           | 0                          | scores already in [0, 1] |                 |                                                    |
+| source_file        | prompt_id | prompt_type                     | encoding  | original_rows | retained_rows | removed_missing_score_rows | normalization_method     | missing_columns | notes                                              |
+| ------------------ | --------- | ------------------------------- | --------- | ------------- | ------------- | -------------------------- | ------------------------ | --------------- | -------------------------------------------------- |
+| qwen-prompt1-1.csv | R1-P1     | Baseline open prompt            | utf-8-sig | 500           | 500           | 0                          | scores already in [0, 1] |                 | response_text missing; retained as score-only file |
+| qwen-prompt1-2.csv | R1-P2     | Role prompt                     | gb18030   | 500           | 500           | 0                          | scores already in [0, 1] |                 |                                                    |
+| qwen-prompt1-3.csv | R1-P3     | Task-component prompt           | gb18030   | 500           | 500           | 0                          | scores already in [0, 1] |                 |                                                    |
+| qwen-prompt1-4.csv | R1-P4     | Reasoning scaffold prompt       | gb18030   | 500           | 500           | 0                          | scores already in [0, 1] |                 |                                                    |
+| qwen-prompt1-5.csv | R1-P5     | Knowledge-grounded prompt (RAG) | gb18030   | 500           | 500           | 0                          | scores already in [0, 1] |                 |                                                    |
+| qwen-prompt1-6.csv | R1-P6     | Self-checking prompt            | gb18030   | 500           | 500           | 0                          | scores already in [0, 1] |                 |                                                    |
+| qwen-prompt1-7.csv | R1-P7     | Demonstration prompt            | gb18030   | 500           | 500           | 0                          | scores already in [0, 1] |                 |                                                    |
 
 ## 2. New formula definition
 
-`J_stable(P) = 0.30*C_disp + 0.25*C_norm + 0.20*C_peak + 0.15*C_region + 0.10*C_weak`.
+`J_stable(P) = 0.20*C_disp + 0.20*C_norm + 0.20*C_peak + 0.20*C_region + 0.20*C_weak`.
 
 Lower `J_stable` indicates that a prompt generates responses that are both closer to the ideal full-score explanation and less dispersed in the three-dimensional conceptual space.
 
@@ -24,25 +24,25 @@ Lower `J_stable` indicates that a prompt generates responses that are both close
 
 The revised target point is `v* = (1.00, 1.00, 1.00)` because the stable-cost workflow evaluates whether responses approach a full-score scientific explanation across D1, D2, and D3.
 
-## 4. Why C_disp has the highest weight
+## 4. Why equal weights are used
 
-`C_disp` receives the highest weight because this version prioritizes stable response distributions. However, low dispersion cannot override scientific quality; prompts with low dispersion but weak conceptual scores are still penalized by `C_norm`, `C_peak`, `C_region`, and `C_weak`.
+The five cost components now have equal weight, so the ranking balances stability, full-score proximity, density peak quality, normative-region entry, and weak-dimension repair. Low dispersion cannot override scientific quality; prompts with low dispersion but weak conceptual scores are still penalized by `C_norm`, `C_peak`, `C_region`, and `C_weak`.
 
 ## 5. Prompt ranking by J_stable
 
-| rank | prompt_id   | prompt_type                     | N   | mean_D1 | mean_D2 | mean_D3 | P_omega | C_disp | C_norm | C_peak | C_region | J_stable | main_problem                                              | second_problem                                              |
-| ---- | ----------- | ------------------------------- | --- | ------- | ------- | ------- | ------- | ------ | ------ | ------ | -------- | -------- | --------------------------------------------------------- | ----------------------------------------------------------- |
-| 1    | Condition 3 | Task-component prompt           | 500 | 0.8516  | 0.9980  | 0.9820  | 0.7220  | 0.1088 | 0.0936 | 0.0000 | 0.2780   | 0.0977   | C_region: Too few responses enter the high-quality region | C_disp: Responses are too dispersed                         |
-| 2    | Condition 7 | Demonstration prompt            | 500 | 0.7672  | 1.0000  | 0.9848  | 0.6500  | 0.0903 | 0.1395 | 0.1155 | 0.3500   | 0.1387   | C_region: Too few responses enter the high-quality region | C_norm: Responses are not close enough to full-score target |
-| 3    | Condition 4 | Reasoning scaffold prompt       | 500 | 0.9132  | 0.9996  | 0.8156  | 0.5220  | 0.1438 | 0.1402 | 0.0000 | 0.4780   | 0.1499   | C_region: Too few responses enter the high-quality region | C_disp: Responses are too dispersed                         |
-| 4    | Condition 2 | Role prompt                     | 500 | 0.8136  | 0.9868  | 0.7944  | 0.6420  | 0.1580 | 0.1909 | 0.1155 | 0.3580   | 0.1721   | C_region: Too few responses enter the high-quality region | C_norm: Responses are not close enough to full-score target |
-| 5    | Condition 1 | Baseline open prompt            | 500 | 0.7284  | 0.9944  | 0.7080  | 0.2620  | 0.1675 | 0.2585 | 0.2582 | 0.7380   | 0.2827   | C_region: Too few responses enter the high-quality region | C_norm: Responses are not close enough to full-score target |
-| 6    | Condition 5 | Knowledge-grounded prompt (RAG) | 500 | 0.4784  | 1.0000  | 0.9876  | 0.1800  | 0.0991 | 0.3031 | 0.3464 | 0.8200   | 0.3085   | C_region: Too few responses enter the high-quality region | C_peak: Most frequent response type is not ideal            |
-| 7    | Condition 6 | Self-checking prompt            | 500 | 0.3928  | 0.9604  | 0.9992  | 0.0200  | 0.1091 | 0.3570 | 0.3464 | 0.9800   | 0.3518   | C_region: Too few responses enter the high-quality region | C_norm: Responses are not close enough to full-score target |
+| rank | prompt_id | prompt_type                     | N   | mean_D1 | mean_D2 | mean_D3 | P_omega | C_disp | C_norm | C_peak | C_region | C_weak | J_stable | main_problem                                              | second_problem                                                 |
+| ---- | --------- | ------------------------------- | --- | ------- | ------- | ------- | ------- | ------ | ------ | ------ | -------- | ------ | -------- | --------------------------------------------------------- | -------------------------------------------------------------- |
+| 1    | R1-P3     | Task-component prompt           | 500 | 0.8516  | 0.9980  | 0.9820  | 0.7220  | 0.1088 | 0.0936 | 0.0000 | 0.2780   | 0.0000 | 0.0961   | C_region: Too few responses enter the high-quality region | C_disp: Responses are too dispersed                            |
+| 2    | R1-P7     | Demonstration prompt            | 500 | 0.7672  | 1.0000  | 0.9848  | 0.6500  | 0.0903 | 0.1395 | 0.1155 | 0.3500   | 0.0328 | 0.1456   | C_region: Too few responses enter the high-quality region | C_norm: Responses are not close enough to full-score target    |
+| 3    | R1-P4     | Reasoning scaffold prompt       | 500 | 0.9132  | 0.9996  | 0.8156  | 0.5220  | 0.1438 | 0.1402 | 0.0000 | 0.4780   | 0.0000 | 0.1524   | C_region: Too few responses enter the high-quality region | C_disp: Responses are too dispersed                            |
+| 4    | R1-P2     | Role prompt                     | 500 | 0.8136  | 0.9868  | 0.7944  | 0.6420  | 0.1580 | 0.1909 | 0.1155 | 0.3580   | 0.0056 | 0.1656   | C_region: Too few responses enter the high-quality region | C_norm: Responses are not close enough to full-score target    |
+| 5    | R1-P1     | Baseline open prompt            | 500 | 0.7284  | 0.9944  | 0.7080  | 0.2620  | 0.1675 | 0.2585 | 0.2582 | 0.7380   | 0.1636 | 0.3172   | C_region: Too few responses enter the high-quality region | C_norm: Responses are not close enough to full-score target    |
+| 6    | R1-P5     | Knowledge-grounded prompt (RAG) | 500 | 0.4784  | 1.0000  | 0.9876  | 0.1800  | 0.0991 | 0.3031 | 0.3464 | 0.8200   | 0.3216 | 0.3780   | C_region: Too few responses enter the high-quality region | C_peak: Most frequent response type is not ideal               |
+| 7    | R1-P6     | Self-checking prompt            | 500 | 0.3928  | 0.9604  | 0.9992  | 0.0200  | 0.1091 | 0.3570 | 0.3464 | 0.9800   | 0.4072 | 0.4399   | C_region: Too few responses enter the high-quality region | C_weak: One dimension is underdeveloped; weakest dimension: D1 |
 
 ## 6. Diagnosis of the best prompts
 
-The best prompt is **Condition 3 (Task-component prompt)**, with `J_stable = 0.0977`. Its main remaining problem is **C_region: Too few responses enter the high-quality region**, and its second remaining problem is **C_disp: Responses are too dispersed**.
+The best prompt is **R1-P3 (Task-component prompt)**, with `J_stable = 0.0961`. Its main remaining problem is **C_region: Too few responses enter the high-quality region**, and its second remaining problem is **C_disp: Responses are too dispersed**.
 
 The recalculated stable cost confirms the expected two-base pattern: the top prompts include the demonstration prompt and the task-component prompt.
 
@@ -56,10 +56,10 @@ Second-round prompts were generated only after recalculating first-round stable 
 
 ### Stable_R2_1_task_component_replication
 
-- source_prompt_id: Condition 3
+- source_prompt_id: R1-P3
 - source_prompt_type: Task-component prompt
 - target_cost_component: replication baseline
-- diagnosed_problem: Condition 3 is the lowest J_stable prompt and needs a direct task-component baseline in round 2
+- diagnosed_problem: R1-P3 is the lowest J_stable prompt and needs a direct task-component baseline in round 2
 - revision_strategy: replicate the best task-component base to confirm first-round stability under the new formula
 - expected_effect: provides a direct benchmark for full-score target and normative-region entry
 - possible_side_effect: does not test a new repair operation
@@ -70,10 +70,10 @@ Second-round prompts were generated only after recalculating first-round stable 
 
 ### Stable_R2_2_demonstration_replication
 
-- source_prompt_id: Condition 7
+- source_prompt_id: R1-P7
 - source_prompt_type: Demonstration prompt
 - target_cost_component: replication baseline
-- diagnosed_problem: Condition 7 has the strongest demonstration-guided stability and needs a direct demonstration baseline in round 2
+- diagnosed_problem: R1-P7 has the strongest demonstration-guided stability and needs a direct demonstration baseline in round 2
 - revision_strategy: replicate the best demonstration base to confirm its stable response distribution
 - expected_effect: provides a direct benchmark for demonstration-guided stability
 - possible_side_effect: does not test a new repair operation
@@ -84,7 +84,7 @@ Second-round prompts were generated only after recalculating first-round stable 
 
 ### Stable_R2_3_component_coherence
 
-- source_prompt_id: Condition 3
+- source_prompt_id: R1-P3
 - source_prompt_type: Task-component prompt
 - target_cost_component: C_disp + C_region
 - diagnosed_problem: C_region: Too few responses enter the high-quality region; C_disp: Responses are too dispersed
@@ -98,7 +98,7 @@ Second-round prompts were generated only after recalculating first-round stable 
 
 ### Stable_R2_4_demo_full_score_target
 
-- source_prompt_id: Condition 7
+- source_prompt_id: R1-P7
 - source_prompt_type: Demonstration prompt
 - target_cost_component: C_norm + C_peak
 - diagnosed_problem: C_norm: Responses are not close enough to full-score target; C_peak is also checked because the target point is now (1,1,1)
@@ -112,7 +112,7 @@ Second-round prompts were generated only after recalculating first-round stable 
 
 ### Stable_R2_5_component_example_hybrid
 
-- source_prompt_id: Condition 3
+- source_prompt_id: R1-P3
 - source_prompt_type: Task-component prompt
 - target_cost_component: C_disp + C_norm + C_peak
 - diagnosed_problem: C_region: Too few responses enter the high-quality region; C_disp: Responses are too dispersed; full-score proximity is targeted by v*=(1,1,1)
@@ -126,10 +126,10 @@ Second-round prompts were generated only after recalculating first-round stable 
 
 ### Stable_R2_6_stability_optimized
 
-- source_prompt_id: Condition 7
+- source_prompt_id: R1-P7
 - source_prompt_type: Demonstration prompt
 - target_cost_component: C_disp
-- diagnosed_problem: C_region: Too few responses enter the high-quality region; stability is explicitly stress-tested because C_disp has the highest formula weight
+- diagnosed_problem: C_region: Too few responses enter the high-quality region; stability is explicitly stress-tested while all cost components have equal formula weight
 - revision_strategy: explicitly test a stable explanation structure
 - expected_effect: should test whether strong structure reduces conceptual dispersion
 - possible_side_effect: very low dispersion may indicate homogenized or over-template responses
@@ -140,7 +140,7 @@ Second-round prompts were generated only after recalculating first-round stable 
 
 ## 9. Risks, especially over-template responses
 
-Because `C_disp` has the highest weight, prompts that impose a strong structure may reduce dispersion while also making responses overly homogeneous. The second round should inspect response text, not only scores, especially for the stability-optimized condition.
+Because `C_disp` still measures response concentration, prompts that impose a strong structure may reduce dispersion while also making responses overly homogeneous. The second round should inspect response text, not only scores, especially for the stability-optimized condition.
 
 ## 10. Recommended next experiment
 

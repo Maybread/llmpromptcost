@@ -23,6 +23,13 @@ import pandas as pd
 V_STAR = np.array([1.0, 1.0, 1.0], dtype=float)
 THETA = np.array([0.8, 0.8, 0.8], dtype=float)
 COST_COMPONENTS = ["C_disp", "C_norm", "C_peak", "C_region", "C_weak"]
+COST_COMPONENT_LABELS = {
+    "C_disp": r"$\mathit{C}_{\mathit{disp}}$",
+    "C_norm": r"$\mathit{C}_{\mathit{norm}}$",
+    "C_peak": r"$\mathit{C}_{\mathit{peak}}$",
+    "C_region": r"$\mathit{C}_{\mathit{region}}$",
+    "C_weak": r"$\mathit{C}_{\mathit{weak}}$",
+}
 
 PROMPT_TYPES = {
     1: "Baseline open prompt",
@@ -123,7 +130,7 @@ def load_round_data(round_dir: Path) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
     for csv_path in sorted(round_dir.glob("*.csv")):
         number = prompt_number_from_path(csv_path)
-        prompt_id = f"Condition {number}"
+        prompt_id = f"R1-P{number}"
         prompt_type = PROMPT_TYPES.get(number, f"Prompt {number}")
         raw_df, encoding = read_csv_with_encoding(csv_path)
         df = standardize_columns(raw_df)
@@ -199,8 +206,14 @@ def compute_stable_prompt_cost(df_prompt: pd.DataFrame) -> Dict[str, float]:
     )
     p_omega = float(in_omega.mean())
     c_region = 1 - p_omega
-    c_weak = float(np.mean(np.maximum(0, THETA - mu)))
-    j_stable = 0.30 * c_disp + 0.25 * c_norm + 0.20 * c_peak + 0.15 * c_region + 0.10 * c_weak
+    c_weak = float(np.sum(np.maximum(0, THETA - mu)))
+    j_stable = (
+        0.20 * c_disp
+        + 0.20 * c_norm
+        + 0.20 * c_peak
+        + 0.20 * c_region
+        + 0.20 * c_weak
+    )
 
     return {
         "N": len(x),
@@ -288,10 +301,10 @@ def diagnose_row(row: pd.Series) -> Dict[str, str]:
 def generate_stable_prompts(cost_df: pd.DataFrame) -> List[Dict[str, str]]:
     top = cost_df.sort_values("J_stable", ascending=True).head(2)
     top_ids = set(top["prompt_id"])
-    pattern_confirmed = {"Condition 3", "Condition 7"}.issubset(top_ids)
+    pattern_confirmed = {"R1-P3", "R1-P7"}.issubset(top_ids)
 
-    condition_3 = cost_df[cost_df["prompt_id"] == "Condition 3"].iloc[0]
-    condition_7 = cost_df[cost_df["prompt_id"] == "Condition 7"].iloc[0]
+    condition_3 = cost_df[cost_df["prompt_id"] == "R1-P3"].iloc[0]
+    condition_7 = cost_df[cost_df["prompt_id"] == "R1-P7"].iloc[0]
     bases = [condition_3, condition_7] if pattern_confirmed else list(top.itertuples(index=False))
 
     candidates = []
@@ -324,7 +337,7 @@ def generate_stable_prompts(cost_df: pd.DataFrame) -> List[Dict[str, str]]:
         condition_3,
         "Stable_R2_1_task_component_replication",
         "replication baseline",
-        "Condition 3 is the lowest J_stable prompt and needs a direct task-component baseline in round 2",
+        "R1-P3 is the lowest J_stable prompt and needs a direct task-component baseline in round 2",
         "replicate the best task-component base to confirm first-round stability under the new formula",
         "provides a direct benchmark for full-score target and normative-region entry",
         "does not test a new repair operation",
@@ -334,7 +347,7 @@ def generate_stable_prompts(cost_df: pd.DataFrame) -> List[Dict[str, str]]:
         condition_7,
         "Stable_R2_2_demonstration_replication",
         "replication baseline",
-        "Condition 7 has the strongest demonstration-guided stability and needs a direct demonstration baseline in round 2",
+        "R1-P7 has the strongest demonstration-guided stability and needs a direct demonstration baseline in round 2",
         "replicate the best demonstration base to confirm its stable response distribution",
         "provides a direct benchmark for demonstration-guided stability",
         "does not test a new repair operation",
@@ -374,7 +387,7 @@ def generate_stable_prompts(cost_df: pd.DataFrame) -> List[Dict[str, str]]:
         condition_7,
         "Stable_R2_6_stability_optimized",
         "C_disp",
-        f"{condition_7['main_problem']}; stability is explicitly stress-tested because C_disp has the highest formula weight",
+        f"{condition_7['main_problem']}; stability is explicitly stress-tested while all cost components have equal formula weight",
         "explicitly test a stable explanation structure",
         "should test whether strong structure reduces conceptual dispersion",
         "very low dispersion may indicate homogenized or over-template responses",
@@ -396,12 +409,16 @@ def dataframe_to_markdown(df: pd.DataFrame) -> str:
 
 
 def prompt_label(prompt_id: str) -> str:
+    if str(prompt_id).startswith("R1-P"):
+        return str(prompt_id)
     match = re.search(r"(\d+)", prompt_id)
     return f"P{match.group(1)}" if match else prompt_id
 
 
 def prompt_order_key(prompt_id: str) -> int:
-    match = re.search(r"(\d+)", prompt_id)
+    match = re.search(r"(?:P|C)(\d+)$", str(prompt_id), flags=re.IGNORECASE)
+    if not match:
+        match = re.search(r"(\d+)", str(prompt_id))
     return int(match.group(1)) if match else 9999
 
 
@@ -452,14 +469,14 @@ def write_report(response_df: pd.DataFrame, log_df: pd.DataFrame, cost_df: pd.Da
     best = cost_df.iloc[0]
     top_two = cost_df.head(2)
     compact = cost_df[
-        ["rank", "prompt_id", "prompt_type", "N", "mean_D1", "mean_D2", "mean_D3", "P_omega", "C_disp", "C_norm", "C_peak", "C_region", "J_stable", "main_problem", "second_problem"]
+        ["rank", "prompt_id", "prompt_type", "N", "mean_D1", "mean_D2", "mean_D3", "P_omega", "C_disp", "C_norm", "C_peak", "C_region", "C_weak", "J_stable", "main_problem", "second_problem"]
     ].copy()
-    for column in ["mean_D1", "mean_D2", "mean_D3", "P_omega", "C_disp", "C_norm", "C_peak", "C_region", "J_stable"]:
+    for column in ["mean_D1", "mean_D2", "mean_D3", "P_omega", "C_disp", "C_norm", "C_peak", "C_region", "C_weak", "J_stable"]:
         compact[column] = compact[column].map(lambda value: f"{value:.4f}")
 
     pattern_note = (
         "The recalculated stable cost confirms the expected two-base pattern: the top prompts include the demonstration prompt and the task-component prompt."
-        if {"Condition 3", "Condition 7"}.issubset(set(top_two["prompt_id"]))
+        if {"R1-P3", "R1-P7"}.issubset(set(top_two["prompt_id"]))
         else "The recalculated stable cost does not fully confirm the expected task-component plus demonstration pattern; next-round candidates still follow the actual top-prompt diagnostics."
     )
     prompt_sections = "\n\n".join(format_prompt(prompt) for prompt in prompts)
@@ -474,7 +491,7 @@ This stable-cost prompt iteration used {len(response_df)} scored responses from 
 
 ## 2. New formula definition
 
-`J_stable(P) = 0.30*C_disp + 0.25*C_norm + 0.20*C_peak + 0.15*C_region + 0.10*C_weak`.
+`J_stable(P) = 0.20*C_disp + 0.20*C_norm + 0.20*C_peak + 0.20*C_region + 0.20*C_weak`.
 
 Lower `J_stable` indicates that a prompt generates responses that are both closer to the ideal full-score explanation and less dispersed in the three-dimensional conceptual space.
 
@@ -482,9 +499,9 @@ Lower `J_stable` indicates that a prompt generates responses that are both close
 
 The revised target point is `v* = (1.00, 1.00, 1.00)` because the stable-cost workflow evaluates whether responses approach a full-score scientific explanation across D1, D2, and D3.
 
-## 4. Why C_disp has the highest weight
+## 4. Why equal weights are used
 
-`C_disp` receives the highest weight because this version prioritizes stable response distributions. However, low dispersion cannot override scientific quality; prompts with low dispersion but weak conceptual scores are still penalized by `C_norm`, `C_peak`, `C_region`, and `C_weak`.
+The five cost components now have equal weight, so the ranking balances stability, full-score proximity, density peak quality, normative-region entry, and weak-dimension repair. Low dispersion cannot override scientific quality; prompts with low dispersion but weak conceptual scores are still penalized by `C_norm`, `C_peak`, `C_region`, and `C_weak`.
 
 ## 5. Prompt ranking by J_stable
 
@@ -508,7 +525,7 @@ Second-round prompts were generated only after recalculating first-round stable 
 
 ## 9. Risks, especially over-template responses
 
-Because `C_disp` has the highest weight, prompts that impose a strong structure may reduce dispersion while also making responses overly homogeneous. The second round should inspect response text, not only scores, especially for the stability-optimized condition.
+Because `C_disp` still measures response concentration, prompts that impose a strong structure may reduce dispersion while also making responses overly homogeneous. The second round should inspect response text, not only scores, especially for the stability-optimized condition.
 
 ## 10. Recommended next experiment
 
@@ -545,7 +562,7 @@ def plot_total_cost(cost_df: pd.DataFrame, output_dir: Path) -> None:
     fig, ax = plt.subplots(figsize=(8, 4.8))
     ax.bar([prompt_label(item) for item in plot_df["prompt_id"]], plot_df["J_stable"], color="#4C78A8")
     ax.set_xlabel("Prompt")
-    ax.set_ylabel("Stable Cost")
+    ax.set_ylabel(r"Stable cost $\mathit{J}_{\mathit{stable}}$")
     ax.set_title("Stable Cost by Prompt")
     ax.grid(axis="y", alpha=0.25)
     fig.tight_layout()
@@ -561,7 +578,7 @@ def plot_components(cost_df: pd.DataFrame, output_dir: Path) -> None:
     fig, ax = plt.subplots(figsize=(8, 4.8))
     image = ax.imshow(matrix, cmap="YlGnBu", aspect="auto")
     ax.set_xticks(np.arange(len(COST_COMPONENTS)))
-    ax.set_xticklabels(COST_COMPONENTS)
+    ax.set_xticklabels([COST_COMPONENT_LABELS[item] for item in COST_COMPONENTS])
     ax.set_yticks(np.arange(len(plot_df)))
     ax.set_yticklabels([prompt_label(item) for item in plot_df["prompt_id"]])
     ax.set_xlabel("Cost Component")

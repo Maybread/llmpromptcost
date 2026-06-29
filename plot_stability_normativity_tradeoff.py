@@ -20,12 +20,16 @@ OUTPUT_SVG = OUTPUT_DIR / "stability_normativity_tradeoff.svg"
 
 
 def condition_label(prompt_id: str) -> str:
+    if str(prompt_id).startswith("R1-P"):
+        return str(prompt_id)
     match = re.search(r"(\d+)", str(prompt_id))
-    return f"C{match.group(1)}" if match else str(prompt_id)
+    return f"R1-P{match.group(1)}" if match else str(prompt_id)
 
 
 def condition_number(prompt_id: str) -> int:
-    match = re.search(r"(\d+)", str(prompt_id))
+    match = re.search(r"(?:P|C)(\d+)$", str(prompt_id), flags=re.IGNORECASE)
+    if not match:
+        match = re.search(r"(\d+)", str(prompt_id))
     return int(match.group(1)) if match else 9999
 
 
@@ -64,31 +68,29 @@ def main() -> None:
 
     ax.annotate(
         "Low dispersion & high normative proportion",
-        xy=(x_min + 0.004, y_max - 0.020),
-        xytext=(x_min + 0.004, y_max - 0.055),
-        arrowprops=dict(arrowstyle="->", color="#5a7d49", lw=1.4),
+        xy=(x_min + 0.004, y_max - 0.055),
         color="#31572c",
         fontsize=9.5,
         ha="left",
         va="center",
     )
     colors = {
-        "C3": "#1f4e79",
-        "C7": "#8b1a1a",
-        "C2": "#777777",
-        "C4": "#777777",
+        "R1-P3": "#1f4e79",
+        "R1-P7": "#8b1a1a",
+        "R1-P2": "#777777",
+        "R1-P4": "#777777",
     }
     markers = {
-        "C3": "o",
-        "C7": "^",
-        "C2": "o",
-        "C4": "o",
+        "R1-P3": "o",
+        "R1-P7": "^",
+        "R1-P2": "o",
+        "R1-P4": "o",
     }
     sizes = {
-        "C3": 170,
-        "C7": 190,
-        "C2": 95,
-        "C4": 95,
+        "R1-P3": 170,
+        "R1-P7": 190,
+        "R1-P2": 95,
+        "R1-P4": 95,
     }
 
     # Plot each prompt condition in the stability-normativity plane:
@@ -96,7 +98,7 @@ def main() -> None:
     # y-axis = P_omega, a normative-region proportion where higher is better.
     for _, row in df.iterrows():
         label = row["condition_label"]
-        if label in {"C3", "C7", "C2", "C4"}:
+        if label in {"R1-P3", "R1-P7", "R1-P2", "R1-P4"}:
             color = colors[label]
             marker = markers[label]
             size = sizes[label]
@@ -123,18 +125,18 @@ def main() -> None:
             zorder=3,
         )
 
-    row_c3 = df[df["condition_label"] == "C3"].iloc[0]
-    row_c7 = df[df["condition_label"] == "C7"].iloc[0]
+    row_p3 = df[df["condition_label"] == "R1-P3"].iloc[0]
+    row_p7 = df[df["condition_label"] == "R1-P7"].iloc[0]
     ax.plot(
-        [row_c7["C_disp"], row_c3["C_disp"]],
-        [row_c7["P_omega"], row_c3["P_omega"]],
+        [row_p7["C_disp"], row_p3["C_disp"]],
+        [row_p7["P_omega"], row_p3["P_omega"]],
         linestyle="--",
         color="#444444",
         linewidth=1.25,
         zorder=2,
     )
-    mid_x = (row_c7["C_disp"] + row_c3["C_disp"]) / 2
-    mid_y = (row_c7["P_omega"] + row_c3["P_omega"]) / 2
+    mid_x = (row_p7["C_disp"] + row_p3["C_disp"]) / 2
+    mid_y = (row_p7["P_omega"] + row_p3["P_omega"]) / 2
     ax.annotate(
         "Complementary targets",
         xy=(mid_x, mid_y),
@@ -147,17 +149,17 @@ def main() -> None:
     )
 
     offsets = {
-        "C1": (-16, 8),
-        "C2": (8, 8),
-        "C3": (14, 0),
-        "C4": (8, -16),
-        "C5": (8, -16),
-        "C6": (8, 8),
-        "C7": (10, -18),
+        "R1-P1": (-16, 8),
+        "R1-P2": (8, 8),
+        "R1-P3": (14, 0),
+        "R1-P4": (8, -16),
+        "R1-P5": (8, -16),
+        "R1-P6": (8, 8),
+        "R1-P7": (10, -18),
     }
     label_texts = {
-        "C3": "C3: normative baseline",
-        "C7": "C7: stability baseline",
+        "R1-P3": "R1-P3: normative baseline",
+        "R1-P7": "R1-P7: stability baseline",
     }
 
     for _, row in df.iterrows():
@@ -169,24 +171,24 @@ def main() -> None:
             xy=(row["C_disp"], row["P_omega"]),
             xytext=(dx, dy),
             textcoords="offset points",
-            fontsize=9.5 if label in {"C3", "C7"} else 9,
-            fontweight="bold" if label in {"C3", "C7"} else "normal",
-            color="#222222" if label in {"C3", "C7"} else "#555555",
+            fontsize=9.5 if label in {"R1-P3", "R1-P7"} else 9,
+            fontweight="bold" if label in {"R1-P3", "R1-P7"} else "normal",
+            color="#222222" if label in {"R1-P3", "R1-P7"} else "#555555",
             ha="left",
             va="center",
             zorder=4,
         )
 
     ax.set_title("Stability\u2013Normativity Trade-off Across Prompt Conditions", fontsize=14, pad=14)
-    ax.set_xlabel(r"Conceptual dispersion cost $C_{\mathrm{disp}}$", fontsize=11)
+    ax.set_xlabel(r"Conceptual dispersion cost $\mathit{C}_{\mathit{disp}}$", fontsize=11)
     ax.set_ylabel(r"Normative-region proportion $P_{\Omega}$", fontsize=11)
     ax.grid(True, color="#d9d9d9", linewidth=0.8, alpha=0.8)
     ax.set_axisbelow(True)
 
     legend_handles = [
-        ax.scatter([], [], s=170, marker="o", color=colors["C3"], edgecolors="black", label="C3"),
-        ax.scatter([], [], s=190, marker="^", color=colors["C7"], edgecolors="black", label="C7"),
-        ax.scatter([], [], s=95, marker="o", color="#777777", edgecolors="black", label="C2/C4"),
+        ax.scatter([], [], s=170, marker="o", color=colors["R1-P3"], edgecolors="black", label="R1-P3"),
+        ax.scatter([], [], s=190, marker="^", color=colors["R1-P7"], edgecolors="black", label="R1-P7"),
+        ax.scatter([], [], s=95, marker="o", color="#777777", edgecolors="black", label="R1-P2/R1-P4"),
         ax.scatter([], [], s=80, marker="o", color="#c9c9c9", edgecolors="#888888", label="Other"),
     ]
     ax.legend(

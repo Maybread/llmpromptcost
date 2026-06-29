@@ -1,0 +1,4 @@
+﻿prompt_id,prompt_type,N,mean_D1,mean_D2,mean_D3,p_peak_D1,p_peak_D2,p_peak_D3,P_omega,C_disp,C_norm,C_peak,C_region,C_weak,J_stable,rank,main_problem,second_problem,suggested_revision_direction
+R2-P3*P7,Round 2 optimized prompt,500,0.9996,1.0,0.8888,1.0,1.0,1.0,0.892,0.0787,0.0644,0.0,0.108,0.0,0.0502,1,C_region: Too few responses enter the high-quality region,C_disp: Responses are too dispersed,Add minimum answer requirements
+R1-C3,Task-component baseline from round 1,500,0.8516,0.998,0.982,1.0,1.0,1.0,0.722,0.1088,0.0936,0.0,0.278,0.0,0.0961,2,C_region: Too few responses enter the high-quality region,C_disp: Responses are too dispersed,Add minimum answer requirements
+R1-C7,Demonstration baseline from round 1,500,0.7672,1.0,0.9848,0.8,1.0,1.0,0.65,0.0903,0.1395,0.1155,0.35,0.0328,0.1456,3,C_region: Too few responses enter the high-quality region,C_norm: Responses are not close enough to full-score target,Add minimum answer requirements

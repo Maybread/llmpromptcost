@@ -2,10 +2,10 @@
 
 ### Stable_R2_1_task_component_replication
 
-- source_prompt_id: Condition 3
+- source_prompt_id: R1-P3
 - source_prompt_type: Task-component prompt
 - target_cost_component: replication baseline
-- diagnosed_problem: Condition 3 is the lowest J_stable prompt and needs a direct task-component baseline in round 2
+- diagnosed_problem: R1-P3 is the lowest J_stable prompt and needs a direct task-component baseline in round 2
 - revision_strategy: replicate the best task-component base to confirm first-round stability under the new formula
 - expected_effect: provides a direct benchmark for full-score target and normative-region entry
 - possible_side_effect: does not test a new repair operation
@@ -16,10 +16,10 @@
 
 ### Stable_R2_2_demonstration_replication
 
-- source_prompt_id: Condition 7
+- source_prompt_id: R1-P7
 - source_prompt_type: Demonstration prompt
 - target_cost_component: replication baseline
-- diagnosed_problem: Condition 7 has the strongest demonstration-guided stability and needs a direct demonstration baseline in round 2
+- diagnosed_problem: R1-P7 has the strongest demonstration-guided stability and needs a direct demonstration baseline in round 2
 - revision_strategy: replicate the best demonstration base to confirm its stable response distribution
 - expected_effect: provides a direct benchmark for demonstration-guided stability
 - possible_side_effect: does not test a new repair operation
@@ -30,7 +30,7 @@
 
 ### Stable_R2_3_component_coherence
 
-- source_prompt_id: Condition 3
+- source_prompt_id: R1-P3
 - source_prompt_type: Task-component prompt
 - target_cost_component: C_disp + C_region
 - diagnosed_problem: C_region: Too few responses enter the high-quality region; C_disp: Responses are too dispersed
@@ -44,7 +44,7 @@
 
 ### Stable_R2_4_demo_full_score_target
 
-- source_prompt_id: Condition 7
+- source_prompt_id: R1-P7
 - source_prompt_type: Demonstration prompt
 - target_cost_component: C_norm + C_peak
 - diagnosed_problem: C_norm: Responses are not close enough to full-score target; C_peak is also checked because the target point is now (1,1,1)
@@ -58,7 +58,7 @@
 
 ### Stable_R2_5_component_example_hybrid
 
-- source_prompt_id: Condition 3
+- source_prompt_id: R1-P3
 - source_prompt_type: Task-component prompt
 - target_cost_component: C_disp + C_norm + C_peak
 - diagnosed_problem: C_region: Too few responses enter the high-quality region; C_disp: Responses are too dispersed; full-score proximity is targeted by v*=(1,1,1)
@@ -72,10 +72,10 @@
 
 ### Stable_R2_6_stability_optimized
 
-- source_prompt_id: Condition 7
+- source_prompt_id: R1-P7
 - source_prompt_type: Demonstration prompt
 - target_cost_component: C_disp
-- diagnosed_problem: C_region: Too few responses enter the high-quality region; stability is explicitly stress-tested because C_disp has the highest formula weight
+- diagnosed_problem: C_region: Too few responses enter the high-quality region; stability is explicitly stress-tested while all cost components have equal formula weight
 - revision_strategy: explicitly test a stable explanation structure
 - expected_effect: should test whether strong structure reduces conceptual dispersion
 - possible_side_effect: very low dispersion may indicate homogenized or over-template responses
